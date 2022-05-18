@@ -22,6 +22,7 @@ public class JpaMain {
             Member member = new Member();
             member.setUsername("member1");
             member.setAge(10);
+            member.setType(MemberType.ADMIN);
 
             member.setTeam(team);
 
@@ -87,12 +88,24 @@ public class JpaMain {
             //on절 (join에서는 where
 //            String query = "select m from Member m left join m.team t on t.name = 'teamA'";
             //on절 세타 조인인 경우
-            String query = "select m from Member m left join Team t on m.username = t.name";
+//            String query = "select m from Member m left join Team t on m.username = t.name";
+//            List<Member> result = em.createQuery(query, Member.class)
+//                    .getResultList();
 
-            List<Member> result = em.createQuery(query, Member.class)
+            //MemberType에 ADMIN 인 경우만 출력
+            String query = "select m.username, 'HELLO', TRUE from Member m " +
+                            "where m.type = :userType";
+            List<Object[]> result = em.createQuery(query)
+                    .setParameter("userType", MemberType.ADMIN)
                     .getResultList();
 
-            
+            for (Object[] objects : result) {
+                System.out.println("objects = " + objects[0]);
+                System.out.println("objects = " + objects[1]);
+                System.out.println("objects = " + objects[2]);
+            }
+
+
 
             System.out.println("result = " + result.size());
 
