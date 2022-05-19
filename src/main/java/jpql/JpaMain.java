@@ -93,6 +93,7 @@ public class JpaMain {
 //                    .getResultList();
 
             //MemberType에 ADMIN 인 경우만 출력
+/*
             String query = "select m.username, 'HELLO', TRUE from Member m " +
                             "where m.type = :userType";
             List<Object[]> result = em.createQuery(query)
@@ -104,10 +105,46 @@ public class JpaMain {
                 System.out.println("objects = " + objects[1]);
                 System.out.println("objects = " + objects[2]);
             }
+*/
 
 
 
-            System.out.println("result = " + result.size());
+
+            //1. 조건식
+/*
+            String query =
+                    "select " +
+                            "case when m.age <= 10 then '학생요금'" +
+                            "     when m.age >= 60 then '경로요금'" +
+                            "     else '일반요금'" +
+                            "end " +
+                            "from Member m";
+*/
+
+            //사용자 이름이 없으면 '이름 없는 회원' 반환
+            /*member.setUsername(null);
+            em.flush();
+            em.clear();
+//            String query = "select coalesce(m.username, '이름 없는 회원') from Member m ";
+
+            // 이름이 관리자일 경우 null 반환해라!!
+            String query = "select nullif(m.username, '관리자') from Member m ";
+            */
+
+            //함수들
+//            String query = "select concat('a','b') From Member m "; //주로 컴켓 쓰신대!!!(문자 두개 합칠때)
+//            String query = "select substring(m.username, 2, 3) from Member m"; //문자 자를때
+//            String query = "select locate('de', 'asdefgh') from Member m";
+
+            //사용자 정의 함수 호출(MyH2Dialect 클래스 참조)
+//            String query = "select function('group_concat', m.username) from Member m"; //방법1
+            String query = "select group_concat(m.username) from Member m"; //방법2
+
+            List<String> result = em.createQuery(query, String.class).getResultList();
+
+            for (String s : result) {
+                System.out.println("s = " + s);
+            }
 
             tx.commit();//쓰기지연 SQL 저장소에 SQL문을 DB에 보냄
         } catch (Exception e) {
