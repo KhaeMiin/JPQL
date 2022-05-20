@@ -188,6 +188,11 @@ public class JpaMain {
                 System.out.println("member1 = " + member1.getUsername() + ", " + member1.getTeam().getName());
             }*/
 
+
+
+            /**
+             * 페칭 조인에는 별칭을 줄 수 없다 [ join fetch t.members m ] 이런식으로 안됨
+             */
             //다대일 조회시
             //그래서 이렇게 한방쿼리를 한다. (그러면 한방에 쿼리 나간거에서 데이터 가져온다!!! 실행해서 확인해보자!)**실무에서 많이 쓰임!!**
 /*            String query = "select m From Member m join fetch m.team";
@@ -200,10 +205,29 @@ public class JpaMain {
 
 
             //반대로 Team으로 조회시(일대다) : 데이터 갯수가 뻥튀기 댑니다!(나중에 보면 이해가 잘 안될 것 같다. 김영한선생님 수업 다시 들어보길!)
-            String query = "select t From Team t join fetch t.members"; //중복값이 나온다.
+//            String query = "select t From Team t join fetch t.members"; //중복값이 나온다.
 //            String query = "select distinct t From Team t join fetch t.members"; //중복값 제거 (같은 식별자 엔티티 제거)
 
-            List<Team> result = em.createQuery(query, Team.class).getResultList();
+            /*List<Team> result = em.createQuery(query, Team.class).getResultList();
+
+            for (Team team1 : result) {
+                System.out.println("team1 = " + team1.getName() + "||" + team1.getMembers().size());
+                for (Member member1 : team1.getMembers()) {
+                    System.out.println("member = " + member1);
+                }
+            }*/
+
+            //일대다(컬렉션) 페이징 처리시(아래 코드로 하면 나중에 팀 맴버가 늘어날수록 쿼리가 오지게 나간다. 성능 딸리겠죠?)
+            // Team.class에     @BatchSize(size = 100) 추가했다.
+            //또는 <property name="hibernate.default_batch_fetch_size" value="100"/> 추가
+            String query = "select t From Team t"; //과감하게 fetch 지워버림
+
+            List<Team> result = em.createQuery(query, Team.class)
+                    .setFirstResult(0)
+                    .setMaxResults(2)
+                    .getResultList();
+
+            System.out.println("result.size() = " + result.size());
 
             for (Team team1 : result) {
                 System.out.println("team1 = " + team1.getName() + "||" + team1.getMembers().size());
