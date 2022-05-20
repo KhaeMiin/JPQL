@@ -16,17 +16,37 @@ public class JpaMain {
 
         try {
             Team team = new Team();
-            team.setName("teamA");
+            team.setName("팀A");
             em.persist(team);
 
+            Team teamB = new Team();
+            teamB.setName("팀B");
+            em.persist(teamB);
+
             Member member = new Member();
-            member.setUsername("member1");
+            member.setUsername("회원1");
             member.setAge(10);
-            member.setType(MemberType.ADMIN);
+            member.setTeam(team);
+//            member.setType(MemberType.ADMIN);
+
+            Member member2 = new Member();
+            member2.setUsername("회원2");
+            member2.setAge(10);
+            member2.setTeam(team);
+
+            Member member3 = new Member();
+            member3.setUsername("회원3");
+            member3.setAge(10);
+            member3.setTeam(teamB);
 
             member.setTeam(team);
 
             em.persist(member);
+            em.persist(member2);
+            em.persist(member3);
+
+            em.flush();
+            em.clear();
 
 /*            List<Member> query = em.createQuery("select m from Member m", Member.class).getResultList();
             TypedQuery<String> query1 = em.createQuery("select m.username from Member m", String.class); //반환타입 명확할 때
@@ -40,8 +60,6 @@ public class JpaMain {
             System.out.println("singleResult = " + result1);
             */
 
-            em.flush();
-            em.clear();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +126,7 @@ public class JpaMain {
 */
 
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             //1. 조건식
 /*
@@ -138,12 +156,60 @@ public class JpaMain {
 
             //사용자 정의 함수 호출(MyH2Dialect 클래스 참조)
 //            String query = "select function('group_concat', m.username) from Member m"; //방법1
+/*
             String query = "select group_concat(m.username) from Member m"; //방법2
 
             List<String> result = em.createQuery(query, String.class).getResultList();
 
             for (String s : result) {
                 System.out.println("s = " + s);
+            }
+*/
+
+            // 묵시적 조인: inner 조인 발생 (성능 튜닝 힘들다..) t.해서 뭐만 하면 다 이너조인 됨.. 사용하지말자ㅠㅠ성능튜닝 망해요
+//            String query2 = "select t.members from Team t";
+            //명시적 조인 (join 키워드 직접사용) (별칭으로 조인 가져와서 사용하는것)
+/*            String query2 = "select m.username from Team t join t.members m";
+            List result = em.createQuery(query2).getResultList();
+            for (Object o : result) {
+                System.out.println("o = " + o);
+            }*/
+
+///////////////////////////////////fetch join ↓///////////////////////////////////////////////////////////////////////////////////
+
+
+            //다대일 조회시
+            //쿼리가 겁나게 많이 나간다 아래 방법으로 하며는!!! (회원 100명 조회하게대면 대략 미친듯이 나가겠쥬? 최악최악)
+/*            String query = "select m From Member m";
+
+            List<Member> result = em.createQuery(query, Member.class).getResultList();
+
+            for (Member member1 : result) {
+                System.out.println("member1 = " + member1.getUsername() + ", " + member1.getTeam().getName());
+            }*/
+
+            //다대일 조회시
+            //그래서 이렇게 한방쿼리를 한다. (그러면 한방에 쿼리 나간거에서 데이터 가져온다!!! 실행해서 확인해보자!)**실무에서 많이 쓰임!!**
+/*            String query = "select m From Member m join fetch m.team";
+
+            List<Member> result = em.createQuery(query, Member.class).getResultList();
+
+            for (Member member1 : result) {
+                System.out.println("member1 = " + member1.getUsername() + ", " + member1.getTeam().getName());
+            }*/
+
+
+            //반대로 Team으로 조회시(일대다) : 데이터 갯수가 뻥튀기 댑니다!(나중에 보면 이해가 잘 안될 것 같다. 김영한선생님 수업 다시 들어보길!)
+            String query = "select t From Team t join fetch t.members"; //중복값이 나온다.
+//            String query = "select distinct t From Team t join fetch t.members"; //중복값 제거 (같은 식별자 엔티티 제거)
+
+            List<Team> result = em.createQuery(query, Team.class).getResultList();
+
+            for (Team team1 : result) {
+                System.out.println("team1 = " + team1.getName() + "||" + team1.getMembers().size());
+                for (Member member1 : team1.getMembers()) {
+                    System.out.println("member = " + member1);
+                }
             }
 
             tx.commit();//쓰기지연 SQL 저장소에 SQL문을 DB에 보냄
