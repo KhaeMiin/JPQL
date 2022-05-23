@@ -261,14 +261,36 @@ public class JpaMain {
 
 
 ///////////////////////////////////Named 쿼리리 ↓//////////////////////////////////////////////////////////////////////////////////
-
+/*
             List<Member> resultList = em.createNamedQuery("Member.findByUsername", Member.class)
                     .setParameter("username", "회원1")
                     .getResultList();
 
             for (Member member1 : resultList) {
                 System.out.println("member1 = " + member1);
-            }
+            }*/
+
+///////////////////////////////////벌크 연산 ↓//////////////////////////////////////////////////////////////////////////////////
+
+            /**
+             * 벌크 연산
+             * 영속성 컨텍스트는 무시, 데이터베이스에 직접 쿼리를 날림
+             *  1. 벌크 연산을 먼저 실행
+             *  2. 벌크 연산 수행 후 영속성 컨텍스트 초기화
+             *
+             *  벌크연산 실행 전에 flush() 자동호출됨
+            *  flush()생략가능
+             */
+            int resultCount = em.createQuery("update Member m set m.age = 20") //영속성 컨텍스트에는 20살 수정된 것이 반영이 안됨
+                    .executeUpdate();
+
+            em.clear();
+
+            Member findMember = em.find(Member.class, member.getId());
+
+            System.out.println("resultCount = " + resultCount);
+
+            System.out.println("findMember = " + findMember.getAge());
 
             tx.commit();//쓰기지연 SQL 저장소에 SQL문을 DB에 보냄
         } catch (Exception e) {
